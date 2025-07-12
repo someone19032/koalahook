@@ -6,7 +6,30 @@ import os
 import webbrowser
 import base64
 from tkinter import filedialog as fd
-from webhook import WEBHOOK
+# Removed: from webhook import WEBHOOK
+
+# ----------------------------
+# New: Webhook file management
+WEBHOOK_FILE = "webhook.txt"
+
+def save_webhook(url: str):
+    with open(WEBHOOK_FILE, "w") as f:
+        f.write(url.strip())
+
+def load_webhook() -> str:
+    if os.path.exists(WEBHOOK_FILE):
+        with open(WEBHOOK_FILE, "r") as f:
+            url = f.read().strip()
+            if url:
+                return url
+    # If file missing or empty, ask user for webhook url
+    url = input("Enter your webhook URL: ").strip()
+    save_webhook(url)
+    return url
+
+def clear_webhook():
+    save_webhook("")  # Overwrite with empty string
+# ----------------------------
 
 # colors because I cannot remember to change it everytime
 
@@ -168,12 +191,12 @@ printascii()
 print(Center.XCenter(f"{cyan}Loading KOALAHOOK..."))
 time.sleep(1.5)
 
-# Main program loop
+# MAIN LOOP
 while True:
     clear()
     printascii()
     try:
-        url = WEBHOOK
+        url = load_webhook()  # <- load webhook from file or input
         response = requests.get(url)
         if response.status_code == 200:
             webhook = response.json()
@@ -228,6 +251,8 @@ while True:
                 print("Creator Info: {}#{} (ID: {})".format(user["username"], user["discriminator"], user["id"]))
             pause("\nPress any key to return to menu...")
         elif ch == 6:
+            # Clear the saved webhook on logout
+            clear_webhook()
             os.system("title Logging out...")
             print("Logging out, please wait...")
             break
